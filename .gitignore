@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments & uv
+.venv/
+venv/
+ENV/
+
+# Caches & test outputs
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment variables & secrets (NEVER commit credentials)
+.env
+.env.*
+!.env.example
+
+# Playwright session / trace / reports (may contain PHPSESSID & credentials)
+storage_state.json
+cookies.json
+playwright-report/
+test-results/
+*.zip
+
+# Downloaded attachments & logs
+downloads/
+*.log
+
+# IDEs & OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

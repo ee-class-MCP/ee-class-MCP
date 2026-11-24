@@ -1,0 +1,49 @@
+[project]
+name = "ee-class-mcp"
+version = "0.1.0"
+description = "MCP server for National Central University (NCU) ee-class LMS"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "beautifulsoup4>=4.15.0",
+    "httpx[http2]>=0.28.1",
+    "lxml>=6.1.3",
+    "mcp>=2.3.0",
+    "playwright>=1.65.2",
+    "pydantic>=2.14.4",
+    "pydantic-settings>=2.16.3",
+]
+
+[project.scripts]
+eeclass-mcp = "eeclass_mcp.server:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.5.0",
+    "respx>=0.23.1",
+    "ruff>=0.17.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/eeclass_mcp"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "integration: tests that require live NCU ee-class access (deselected by default)",
+]
+addopts = "-m 'not integration'"
