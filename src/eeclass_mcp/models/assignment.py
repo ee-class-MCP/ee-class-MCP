@@ -4,6 +4,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, HttpUrl
 
+from file import Attachment
+
 
 class AssignmentStatus(StrEnum):
     """Enumeration of possible assignment submission statuses."""
@@ -22,16 +24,17 @@ class AssignmentStatus(StrEnum):
     """The assignment has been graded."""
 
 
-class Assignment(BaseModel):
+class Assignment(BaseModel, Attachment):
     """Represents an assignment or homework item in a course."""
 
     id: str = Field(..., description="Assignment identifier.")
     title: str = Field(..., description="Assignment title.")
+    description: str | None = Field(default=None, description="Assignment description or instructions.") 
+    download_files: list[Attachment] | None = Field(default=None, description="Local path to the downloaded assignment file.") 
     due_at: str | None = Field(default=None, description="Submission deadline string.")
     allow_late: bool = Field(default=False, description="Whether late submissions are allowed.")
     status: AssignmentStatus | None = Field(
         default=None,
         description="Submission status (e.g. submitted, not_submitted, graded).",
     )
-    score: str | None = Field(default=None, description="Grade or score string if available.")
     url: HttpUrl = Field(..., description="Direct URL to the assignment page.")
