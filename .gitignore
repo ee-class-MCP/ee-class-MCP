@@ -30,6 +30,9 @@ playwright-report/
 test-results/
 *.zip
 
+# Un-anonymized page captures (contain student ID, name, session tokens)
+tests/fixtures/raw/
+
 # Downloaded attachments & logs
 downloads/
 *.log
