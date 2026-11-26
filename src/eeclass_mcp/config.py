@@ -41,6 +41,10 @@ class Settings(BaseSettings):
         default=True,
         description="Whether Playwright launches Chromium in headless mode.",
     )
+    login_lock_file: Path = Field(
+        default=Path("LOGIN_FAILED"),
+        description="Written after a rejected login; while it exists, login is not attempted.",
+    )
     request_timeout: float = Field(
         default=30.0,
         gt=0,

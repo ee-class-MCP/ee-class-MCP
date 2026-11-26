@@ -26,6 +26,7 @@ htmlcov/
 # Playwright session / trace / reports (may contain PHPSESSID & credentials)
 storage_state.json
 cookies.json
+LOGIN_FAILED
 playwright-report/
 test-results/
 *.zip
