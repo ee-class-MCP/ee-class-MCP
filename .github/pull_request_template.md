@@ -1,4 +1,4 @@
-<!-- 請確認 PR 標題符合 Conventional Commits，例如：feat(parser): 支援課程公告解析 -->
+<!-- 請確認 PR 標題符合 Conventional Commits，例如：feat(parsers): 支援課程公告解析 -->
 
 ## 關聯 Issue
 <!-- 
@@ -14,10 +14,10 @@ Closes #
 
 ## 跨組 / 介面影響
 - [ ] 不影響另一小組或共用介面
-- [ ] 影響共用模組 / MCP tool schema / 另一小組介面（請簡述）：
+- [ ] 影響共用模組 / MCP tool schema / 另一小組介面（請簡述；若為 Breaking Change 請說明遷移與相容方式）：
 
 ## 測試與驗證方式
-<!-- 說明新增的測試項目；若涉及實際連線 ee-class，請補充手動驗證方式 -->
+<!-- 說明新增的測試項目與執行結果；若涉及實際連線 ee-class 或有因環境限制未執行的檢查（如 integration 測試），請如實補充說明 -->
 - 
 
 ## AI 使用揭露
@@ -27,7 +27,7 @@ Closes #
 - [ ] **中度協作**：用於產生樣板程式碼、單元測試或局部重構
 - [ ] **高度參與**：用於產出重要功能程式碼或跨檔案實作，且**已由本人逐行審核與驗證**
 
-<!-- 若有使用 AI，請填寫以下三項資訊 -->
+<!-- 若有使用 AI，請填寫以下三項資訊（已知工具／模型版本建議一併註明，並可於此處或測試段落簡述人工檢查方式） -->
 - **使用工具**：
 - **進行操作**：
 - **影響範圍**：
@@ -37,5 +37,5 @@ Closes #
 - [ ] 已本地通過 `uv run ruff check .`、`uv run ruff format --check .` 與 `uv run pytest`
 - [ ] 正式程式碼未使用 `print()`（日誌皆透過 `logging` 輸出至 `stderr`）
 - [ ] 未包含 `.env`、帳密或 Cookie，且新增的 HTML fixture / log 均已去識別化
-- [ ] 若有相依套件異動，已一併更新 `pyproject.toml` 與 `uv.lock`
+- [ ] 若有相依套件或環境變數異動，已一併更新 `pyproject.toml`、`uv.lock` 或 `.env.example`
 - [ ] 我已親自檢視並理解本次 PR 的每一行程式碼（含 AI 產出內容）
