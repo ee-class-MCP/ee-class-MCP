@@ -4,6 +4,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, HttpUrl
 
+from eeclass_mcp.models.material import Attachment
+
 
 class AssignmentStatus(StrEnum):
     """Enumeration of possible assignment submission statuses."""
@@ -35,3 +37,15 @@ class Assignment(BaseModel):
     )
     score: str | None = Field(default=None, description="Grade or score string if available.")
     url: HttpUrl = Field(..., description="Direct URL to the assignment page.")
+    course_id: int | None = Field(default=None, description="Course identifier, if known.")
+    course_name: str | None = Field(default=None, description="Course name, if known.")
+    open_at: str | None = Field(
+        default=None, description="Time submissions open, as shown on the page."
+    )
+    description: str | None = Field(
+        default=None, description="Plain-text assignment description, lines joined by newline."
+    )
+    weight: str | None = Field(default=None, description="Grade weight string, e.g. '5%'.")
+    attachments: list[Attachment] = Field(
+        default_factory=list, description="Files attached to the assignment description."
+    )
