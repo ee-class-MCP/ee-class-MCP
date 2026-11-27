@@ -28,7 +28,12 @@ from eeclass_mcp.logging_config import setup_logging
 FIXTURE_DIR = Path(__file__).resolve().parent.parent / "tests" / "fixtures"
 RAW_DIR = FIXTURE_DIR / "raw"
 
-# Per-session tokens and secrets that change on every login or identify the user.
+# Replacement values follow tests/fixtures/README.md (#2) so every fixture looks alike.
+STUDENT_ID_PLACEHOLDER = "100000000"
+PHONE_PLACEHOLDER = "0900000000"
+HASH_PLACEHOLDER = "0000000000000000"
+
+# Per-session tokens, contact details and IDs that identify the user.
 _TOKEN_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     # ajaxAuth=xxx in URLs, "ajaxAuth":"xxx" / ajaxAuth: 'xxx' in inline JS
     (re.compile(r"(ajaxAuth[\"']?\s*[=:]\s*[\"']?)[^\"'&\s<>,;)]+"), r"\1REDACTED"),
@@ -39,26 +44,30 @@ _TOKEN_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"(value=[\"'])[^\"']*([\"'][^>]*?name=[\"']anticsrf[\"'])"), r"\1REDACTED\2"),
     (re.compile(r"([\"']?anticsrf[\"']?\s*[=:]\s*[\"'])[^\"']*"), r"\1REDACTED"),
     (re.compile(r"(PHPSESSID[\"']?\s*[=:]\s*[\"']?)[^\"'&\s<>;]+"), r"\1REDACTED"),
-    # e-mail addresses
     (re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+"), "redacted@example.com"),
-    # Other students' names: "(王小明)" author tags in discussion / event lists
+    (re.compile(r"\b09\d{8}\b"), PHONE_PLACEHOLDER),
+    # userId=123 / "poster":123 / ouid: '123' in URLs and inline JS
+    (re.compile(r"((?:userId|poster|ouid)[\"']?\s*[=:]\s*[\"']?)\d+"), r"\g<1>0"),
+    # Per-file hashes in /download/<hash> and /sysdata/.../<hash>
     (
-        re.compile(
-            r"(<div\s+class=[\"']icon pull-right[\"']\s*>\s*<span[^>]*fs-hint[^>]*>)"
-            r"\([^)<]*\)(</span>)"
-        ),
-        r"\1(REDACTED_AUTHOR)\2",
+        re.compile(r"(/(?:download|sysdata)/(?:[^\"'\s<>?]*/)?)[0-9a-f]{16,}"),
+        rf"\1{HASH_PLACEHOLDER}",
     ),
-    # User-written discussion titles (may mention classmates by name)
-    (
-        re.compile(
-            r"(<a\s+href=[\"']/course/courseDiscuss/\d+[\"'](?:(?!</a>).)*?"
-            r"<span\s+class=[\"']\s*text\s*[\"']\s*>)[^<]*(</span>)",
-            re.DOTALL,
-        ),
-        r"\1REDACTED_DISCUSSION\2",
-    ),
+    # Level and badge points on the dashboard sidebar ("等級 7", "7537 分")
+    (re.compile(r"等級\s*\d+"), "等級 0"),
+    (re.compile(r"\d+(\s*分\s*<span[^>]*fa-chevron-right)"), r"0\1"),
 ]
+
+# Other students' names: "(王小明)" author tags in discussion / event lists
+_AUTHOR_TAG = re.compile(
+    r"(<div\s+class=[\"']icon pull-right[\"']\s*>\s*<span[^>]*fs-hint[^>]*>)\([^)<]*\)(</span>)"
+)
+# User-written discussion titles (may mention classmates by name)
+_DISCUSSION_TITLE = re.compile(
+    r"(<a\s+href=[\"']/course/courseDiscuss/\d+[\"'](?:(?!</a>).)*?"
+    r"<span\s+class=[\"']\s*text\s*[\"']\s*>)[^<]*(</span>)",
+    re.DOTALL,
+)
 
 
 def fixture_name(path: str) -> str:
@@ -67,20 +76,33 @@ def fixture_name(path: str) -> str:
     return name or "index"
 
 
-def anonymize(html: str, literals: list[str]) -> str:
-    """Replace session tokens, e-mails and the given literal strings (ID, name...)."""
+def anonymize(html: str, student_id: str, names: list[str]) -> str:
+    """Replace tokens, contact details, the student ID, and every person's name.
+
+    The user's own names (``--redact``) become 使用者01, 使用者02... and other people's
+    author tags continue the numbering. Discussion titles become 測試討論 N.
+    """
     for pattern, repl in _TOKEN_PATTERNS:
         html = pattern.sub(repl, html)
+    if student_id:
+        html = html.replace(student_id, STUDENT_ID_PLACEHOLDER)
+
     # Longest first so "王小明" is replaced before a substring like "小明".
-    for i, literal in enumerate(sorted({s for s in literals if s}, key=len, reverse=True)):
-        html = html.replace(literal, f"REDACTED_{i}")
-    return html
+    unique_names = sorted({n for n in names if n}, key=len, reverse=True)
+    for i, name in enumerate(unique_names, start=1):
+        html = html.replace(name, f"使用者{i:02d}")
+
+    counter = iter(range(len(unique_names) + 1, 10_000))
+    html = _AUTHOR_TAG.sub(lambda m: f"{m[1]}(使用者{next(counter):02d}){m[2]}", html)
+    titles = iter(range(1, 10_000))
+    return _DISCUSSION_TITLE.sub(lambda m: f"{m[1]}測試討論 {next(titles)}{m[2]}", html)
 
 
 async def capture(paths: list[str], extra_literals: list[str], *, offline: bool) -> int:
     settings = Settings()
     setup_logging(settings.log_level)
-    literals = [settings.username.strip(), *extra_literals]
+    student_id = settings.username.strip()
+    literals = [student_id, *extra_literals]
     FIXTURE_DIR.mkdir(parents=True, exist_ok=True)
     RAW_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -95,7 +117,7 @@ async def capture(paths: list[str], extra_literals: list[str], *, offline: bool)
             else:
                 html = await client.get_html(path)
                 raw_path.write_text(html, encoding="utf-8")
-            clean = anonymize(html, literals)
+            clean = anonymize(html, student_id, extra_literals)
             (FIXTURE_DIR / f"{name}.html").write_text(clean, encoding="utf-8")
 
             remaining = [s for s in literals if s and s in clean]
